@@ -9,7 +9,7 @@
 		"test": "vitest",
 		"cf-typegen": "wrangler types",
 		"migrate": "dotenv -e .dev.vars -- npx prisma migrate dev",
-		"generate": "dotenv -e .dev.vars -- npx prisma generate --no-engine",
+		"generate": "dotenv -e .dev.vars -- npx prisma generate",
 		"studio": "dotenv -e .dev.vars -- npx prisma studio"
 	},
 	"devDependencies": {
