@@ -1,18 +1,41 @@
-/**
- * Welcome to Cloudflare Workers! This is your first worker.
- *
- * - Run `npm run dev` in your terminal to start a development server
- * - Open a browser tab at http://localhost:8787/ to see your worker in action
- * - Run `npm run deploy` to publish your worker
- *
- * Bind resources to your worker in `wrangler.jsonc`. After adding bindings, a type definition for the
- * `Env` object can be regenerated with `npm run cf-typegen`.
- *
- * Learn more at https://developers.cloudflare.com/workers/
- */
+import { PrismaClient } from './generated/prisma/client';
+import { PrismaPg } from '@prisma/adapter-pg';
+
+export interface Env {
+	DATABASE_URL: string;
+}
 
 export default {
 	async fetch(request, env, ctx): Promise<Response> {
-		return new Response('Hello World!');
+		const path = new URL(request.url).pathname;
+		if (path === '/favicon.ico')
+			return new Response('Resource not found', {
+				status: 404,
+				headers: {
+					'Content-Type': 'text/plain',
+				},
+			});
+
+		const adapter = new PrismaPg({
+			connectionString: env.DATABASE_URL,
+		});
+
+		const prisma = new PrismaClient({
+			adapter,
+		});
+
+		const user = await prisma.user.create({
+			data: {
+				email: `Prisma-Postgres-User-${Math.ceil(Math.random() * 1000)}@gmail.com`,
+				name: 'Jon Doe',
+			},
+		});
+
+		const userCount = await prisma.user.count();
+
+		return new Response(`\
+Created new user: ${user.name} (${user.email}).
+Number of users in the database: ${userCount}.
+    `);
 	},
 } satisfies ExportedHandler<Env>;
